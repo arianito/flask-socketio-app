@@ -1,27 +1,23 @@
 #!/usr/bin/env python
 
-from app.app import app
+from app.config import app
+from app import subscribe
+from app import realtime
+
 from threading import Thread, Event
 import time
 import os
 
 
-def subscribe_handler(action, message):
-    if action == 'hello':
-        app.socket.emit('reply-to-someone', message, broadcast=True)
-        time.sleep(0.2)
-    pass
-
-
 def service_handler(ev):
     print(' * Thread worker [ONLINE] ')
     while ev.is_set():
-        time.sleep(2)
+        realtime.run()
 
 
-def flask_handler(ev):
+def flask_handler():
     print(' * SocketIO and Flask [ONLINE] ')
-    app.aio.attach(subscribe_handler)
+    app.aio.attach(subscribe.handle)
     app.socket.run(app)
 
 
@@ -30,10 +26,10 @@ if __name__ == '__main__':
     try:
         event.set()
         main_thread = Thread(target=service_handler, args=(event,))
-        flask_thread = Thread(target=flask_handler, args=(event,))
-        main_thread.start()
-        time.sleep(0.2)
+        flask_thread = Thread(target=flask_handler)
         flask_thread.start()
+        time.sleep(0.5)
+        main_thread.start()
 
         while 1:
             time.sleep(0.5)
