@@ -1,16 +1,15 @@
 from flask import Flask, send_file
-from flask_socketio import SocketIO
-from pubsub import PubSub
 import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-app.socket = SocketIO(app)
-app.aio = PubSub()
-app.publish = app.aio.publish
 
 import routes
-import socketio
+
+
+@app.errorhandler(IOError)
+def handle_invalid_usage(error):
+    return 'error'
 
 
 @app.route('/<path:path>')
