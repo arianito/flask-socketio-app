@@ -3,5 +3,6 @@ from time import sleep, time
 
 
 def run():
-    app.publish('hello', time())
-    sleep(2.0)
+     # check
+    # app.publish('finger', "hello " + str(time()))
+    sleep(1.0)

@@ -6,6 +6,11 @@ def connect():
     app.publish('hello', 'you are connected.')
 
 
+@app.socket.on('disconnect')
+def connect():
+    app.publish('hello', 'you are connected.')
+
+
 @app.socket.on('update')
 def update():
     app.aio.worker()

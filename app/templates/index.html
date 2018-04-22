@@ -5,13 +5,29 @@
 </head>
 <body>
 
-<h1 id="hello"></h1>
-<div id="data"></div>
-
-
 <a href="/settings">Settings</a>
 
-<script src="/js/socketio.js"></script>
-<script src="/js/app.js"></script>
+
+<script src="/js/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var ajaxCall = function (b) {
+            console.log(b);
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:5000/activate',
+                success: ajaxCall,
+                error: function (a) {
+                  console.log(a)
+                },
+                dataType: 'json'
+            });
+        };
+        ajaxCall();
+    });
+</script>
+
+
 </body>
 </html>
