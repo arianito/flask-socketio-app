@@ -4,38 +4,46 @@ import threading
 from time import time, sleep
 from random import randint
 
-_last_time = 0
+_lastTime = 0
 _alive = False
 _data = 0
+_semiLock = threading.Semaphore()
 
 
 @app.before_request
 def before_request():
-    global _alive, _last_time, _data
+    global _alive, _lastTime, _data, _semiLock
     if _alive:
-        _alive = False
+        with _semiLock:
+            _alive = False
+        sleep(0.2)
 
 
 def handler():
-    global _data, _alive, _last_time
+    global _data, _alive, _lastTime, _semiLock
 
     while _alive:
-        if time() - _last_time > 10:
-            _data = 19 + _data
-            _alive = False
+        if time() - _lastTime > 10:
+            with _semiLock:
+                _data = 19 + _data
+                _alive = False
 
 
 @app.route('/activate', methods=['POST'])
 def activate():
-    global _alive, _last_time, _data
+    global _alive, _lastTime, _data, _semiLock
     tmp = randint(1000, 9999)
     print(str(tmp) + ' activated')
 
     if _alive:
-        _alive = False
+        with _semiLock:
+            _alive = False
         sleep(0.5)
-    _alive = True
-    _last_time = time()
+
+    with _semiLock:
+        _alive = True
+
+    _lastTime = time()
     trd = threading.Thread(target=handler)
     trd.start()
     trd.join()

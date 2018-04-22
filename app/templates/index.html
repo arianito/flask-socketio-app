@@ -12,14 +12,67 @@
 
 <script>
     $(document).ready(function () {
+        var retries = 0;
+        var retryList = [8, 16, 32];
+        var connected = false;
+
+        var ready = false;
+        var deviceReady = function () {
+            console.log('finger ready.');
+        };
+        var connectionFailed = function () {
+            console.log('connection failed.');
+        };
+        var connectionRetry = function (wait) {
+            console.log('retrying after ' + wait + ' seconds...');
+        };
+        var dataReceived = function (data) {
+            console.log(data);
+        };
+
         var ajaxCall = function (b) {
-            console.log(b);
+            var error = false;
+            setTimeout(function () {
+                if (!error) {
+                    if (!ready) {
+                        deviceReady();
+                        ready = true;
+                        connected = true;
+                    }
+                }
+            }, 1000);
             $.ajax({
                 type: 'POST',
                 url: '/activate',
-                success: ajaxCall,
-                error: function (a) {
-                  console.log(a)
+                success: function (data) {
+                    error = false;
+                    if (!connected) {
+                        connected = true;
+                        console.log('connected.');
+                    }
+                    if (!ready) {
+                        deviceReady();
+                        ready = true;
+                    }
+                    dataReceived(data);
+                    ajaxCall();
+                },
+                error: function (x) {
+                    error = true;
+                    const tme = retryList[retries >= retryList.length ? retryList.length - 1 : retries];
+
+                    if(ready) {
+                        ready = false;
+                    }
+                    if (connected) {
+                        connectionFailed();
+                        connected = false;
+                    }
+                    connectionRetry(tme);
+                    setTimeout(function () {
+                        ajaxCall();
+                        retries++;
+                    }, tme * 1000);
                 },
                 dataType: 'json'
             });
