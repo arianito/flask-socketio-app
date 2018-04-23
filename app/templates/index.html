@@ -11,29 +11,44 @@
 <script src="/js/jquery.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        var retries = 0;
-        var retryList = [8, 16, 32];
-        var connected = false;
 
+</script>
+<script>
+    $(document).ready(function () {
+        // store total number of retries to connect
+        var retries = 0;
+        // retry timeout sequences
+        var retryList = [8, 16, 32];
+        // true if connected
+        var connected = false;
+        // true if device ready and listening
         var ready = false;
+
+        // function called once after connection failed, determines that device is connected.
         var deviceReady = function () {
             console.log('finger ready.');
         };
-        var connectionFailed = function () {
-            console.log('connection failed.');
-        };
-        var connectionRetry = function (wait) {
-            console.log('retrying after ' + wait + ' seconds...');
-        };
+        // function called every time that data received from device.
         var dataReceived = function (data) {
             console.log(data);
         };
-
-        var ajaxCall = function (b) {
+        // function called every time that maximum retry timeout reached and device still not connected.
+        var connectionRetry = function (wait) {
+            console.log('retrying after ' + wait + ' seconds...');
+        };
+        // function called once every time that connection state changed to disconnected.
+        var connectionFailed = function () {
+            console.log('connection failed.');
+        };
+        // recursive connection which handles ajax request calls to device.
+        var ajaxCall = function () {
+            // device will be ready only if there was no error in the output for 1000ms or less.
             var error = false;
+            // set a callback for 1000ms after request sent.
             setTimeout(function () {
+                // check that there was no error after 1000ms.
                 if (!error) {
+                    // make sure that device ready function will get called once.
                     if (!ready) {
                         deviceReady();
                         ready = true;
@@ -41,34 +56,46 @@
                     }
                 }
             }, 1000);
+            // there is no problem
+            // ajax request starts here
             $.ajax({
                 type: 'POST',
                 url: '/activate',
+                // function success will call if response received from server
                 success: function (data) {
+                    // no error found
                     error = false;
-                    if (!connected) {
-                        connected = true;
-                        console.log('connected.');
-                    }
+                    // connection state will change here.
+                    connected = true;
+                    // device ready function didn't get called, then call it.
+                    // make sure app is connected to the device
                     if (!ready) {
                         deviceReady();
                         ready = true;
                     }
+                    retries = 0;
                     dataReceived(data);
+                    // call ajax again recursively, like forever.
                     ajaxCall();
                 },
+                // function success will call after timeout or error received in connection
                 error: function (x) {
+                    // well there's something wrong in the background
+
                     error = true;
+                    // maximum delay wanted before starting a new request, based on number of tries.
                     const tme = retryList[retries >= retryList.length ? retryList.length - 1 : retries];
 
-                    if(ready) {
-                        ready = false;
-                    }
+                    //  device is not ready.
+                    ready = false;
+                    // check connection state changed, and call the connectionFailed
                     if (connected) {
                         connectionFailed();
                         connected = false;
                     }
+                    // call connection retry everytime there is an error
                     connectionRetry(tme);
+                    // setup an interval to call after retry timeout reached
                     setTimeout(function () {
                         ajaxCall();
                         retries++;
@@ -76,7 +103,8 @@
                 },
                 dataType: 'json'
             });
-        };
+        }; // ajaxCall function ends here
+        // lets call this function every time page did refereshed
         ajaxCall();
     });
 </script>
