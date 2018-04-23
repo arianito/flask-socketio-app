@@ -28,9 +28,9 @@ def handler():
     global _data, _alive, _lastTime, _semiLock
     print '>> thread'
     while _alive:
-        if time() - _lastTime > 10:
+        if time() - _lastTime > 3:
             with _semiLock:
-                _data = 19 + _data
+                _data = 1 + _data
                 _alive = False
 
         sleep(0.3) # delay must be lower than the value from origin thread kill
