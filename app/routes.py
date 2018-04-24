@@ -1,7 +1,24 @@
-from config import app
-from flask import render_template
+from config import app, publish, store, socket
+from flask import render_template, request
 
-op = 0
+from time import time
+store['clients'] = []
+
+
+@socket.on('connect')
+def socket_connect():
+    socket.emit('auth', request.sid);
+    store['clients'].append(request.sid)
+
+
+@socket.on('disconnect')
+def socket_disconnect():
+    store['clients'].remove(request.sid)
+
+
+@socket.on('temp')
+def temp(data):
+    socket.emit('message', str(data), room=request.sid)
 
 
 @app.route('/')
@@ -9,14 +26,8 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/settings')
-def settings():
-    return render_template('settings.html')
-
-
 @app.route('/send')
 def send():
-    global op
-    op = op + 1
-    app.publish("hello", "from send " + str(op))
+    for d in store['clients']:
+        publish('message', d)
     return "ok"

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-from app.config import app
-from app import subscribe
-from app import realtime
+from app.config import app, socket, publish, worker
+from app.logic import receive, run
 
 from threading import Thread, Event
 import time
@@ -12,13 +11,13 @@ import os
 def service_handler(ev):
     print(' * Thread worker [ONLINE] ')
     while ev.is_set():
-        realtime.run()
+        run()
 
 
 def flask_handler():
     print(' * SocketIO and Flask [ONLINE] ')
-    app.aio.attach(subscribe.handle)
-    app.socket.run(app)
+    worker.attach(receive)
+    socket.run(app)
 
 
 if __name__ == '__main__':
@@ -30,7 +29,6 @@ if __name__ == '__main__':
         flask_thread.start()
         time.sleep(0.5)
         main_thread.start()
-
         while 1:
             time.sleep(0.5)
     except KeyboardInterrupt:

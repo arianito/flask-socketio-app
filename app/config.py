@@ -1,16 +1,22 @@
 from flask import Flask, send_file
 from flask_socketio import SocketIO
-from pubsub import PubSub
+from . import SocketWorker, Store
 import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-app.socket = SocketIO(app)
-app.aio = PubSub()
-app.publish = app.aio.publish
+
+socket = SocketIO(app)
+worker = SocketWorker()
+publish = worker.publish
+store = Store()
 
 import routes
-import socketio
+
+
+@socket.on('update')
+def update():
+    worker.update()
 
 
 @app.route('/<path:path>')
