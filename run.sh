@@ -1,1 +1,1 @@
-gunicorn wsgi:app -w 1 --threads 12
+gunicorn server:app -w 1 --threads 12
