@@ -7,7 +7,7 @@ store['clients'] = []
 
 @socket.on('connect')
 def socket_connect():
-    socket.emit('auth', request.sid);
+    socket.emit('auth', request.sid)
     store['clients'].append(request.sid)
 
 
